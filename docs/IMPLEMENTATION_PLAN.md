@@ -1,6 +1,6 @@
 # Implementation Plan — annoying.
 
-Status: M0 approved; M1 and M2 implemented as an interactive prototype pending review.
+Status: M2.5 Part A.1 mobile interaction remediation implemented; physical-device acceptance pending.
 
 ## Proportionate workflow
 
@@ -11,7 +11,7 @@ Status: M0 approved; M1 and M2 implemented as an interactive prototype pending r
 
 ## M0 — Foundation approval
 
-Architecture, stack, requirements, design source of truth, and local skills approved. Product defaults: Owner/Member roles; first-user bootstrap then invitation registration; single-use seven-day invitations; group-level AI configuration; customizable default categories; recoverable soft deletion with lightweight history; in-app notifications; English-first UI; light theme first; single-container deployment with persistent SQLite.
+Architecture, stack, requirements, design source of truth, and local skills approved. Product defaults: Owner/Member roles; first-user bootstrap then invitation registration; single-use seven-day invitations; group-level AI configuration; customizable default categories; recoverable soft deletion with lightweight history; in-app notifications; English-first UI; Carbon dark mode as the primary experience; single-container deployment with persistent SQLite.
 
 ## M1 — Application scaffold and design system
 
@@ -25,29 +25,31 @@ Deliverables: navigable Dashboard, Activity, Quick Add, Insights, and Settings u
 
 Acceptance: ordinary capture is designed toward under 10 seconds and recurring confirmation under 3 seconds; classifications may remain unclassified/pending; quick add is available everywhere; local save updates visible activity/summary; all main screens and charts work at 320/375/390px and desktop without unintended overflow; screenshots and browser verification are captured.
 
-## M2.5 — Carbon redesign and smart capture
+## M2.5 Part A — Carbon visual pilot and smart capture
 
 Replace the initial warm-neutral interface with the approved Carbon cyber-minimal system without rebuilding the application. Add URL-based main navigation, locally hosted Space Grotesk/Geist typography, exact 44px interactions, accessible drawer focus, expanded stable categories, optional tags, and a shared Smart/Manual capture draft. Essential capture controls remain immediately visible. Deterministic parsing and responsive history autocomplete use the shared mock ledger and never claim live AI.
 
 Acceptance: explicit amount/currency/date win over inferred values; historical time is never invented; selecting history never overwrites explicit input; manual save works without inference; tags remain independent; shared totals still reconcile; exact target viewports, keyboard/focus, autocomplete, loading/error/empty states, production build, and Carbon screenshots pass review.
 
+Review gate: stop after Home, Capture, and shared-shell approval. Part B applies the approved Carbon language to Activity, Insights, Settings, and future authentication designs and resolves remaining M2 review findings without expanding into backend work.
+
 ## M3 — Authentication, groups, and invitations
 
 Implement strong sessions/passwords, first-user bootstrap, invitation-only subsequent registration, multi-group switching, Owner/Member authorization, and single-use seven-day invitations. Every group read/write is server-authorized. Finalize recovery and detailed permissions in this milestone.
 
-## M4 — Persistent expense management, dashboard, and deterministic charts
+## M4 — Real expense engine
 
-Add Drizzle/SQLite migrations and persistent categories, expenses, soft deletion/history, foreign-currency provenance, filtering, edits, totals, budgets, and charts. Preserve original input, precise money, group-local dates, optional time periods, independent/pending classifications, and exact reconciliation.
+Add Drizzle/SQLite migrations and persistent categories, expenses, soft deletion/history, foreign-currency provenance, filtering, edits, historical autocomplete, totals, and expense-backed charts. Preserve original input, precise money, group-local dates, optional time periods, independent/pending classifications, and exact reconciliation.
 
-## M5 — Notifications, historical suggestions, and recurring expenses
+## M5 — AI-native capture
 
-Create expense and in-app notification records in one SQLite transaction. Add unread/history, deterministic prior-description/category/amount suggestions, recurring rules/due suggestions, confirmation, and durable deduplication. Actuals, rules, and suggestions remain separate; no background worker or queue without a demonstrated need.
+Add OpenAI, Anthropic, and xAI provider adapters, structured description and classification/tag suggestions, bounded group memory, correction feedback, and encrypted server-side credential handling. Manual capture remains independent, AI output stays reviewable, and default CI uses no paid calls.
 
-## M6 — AI integration, group memory, and financial insights
+## M6 — Financial intelligence
 
-Add group-level encrypted provider configuration and OpenAI/Anthropic/xAI adapters, structured reviewable suggestions, bounded group-isolated history, disclosure, timeouts/fallback, and weekly/monthly insights that visibly separate deterministic facts from generated interpretation. Default CI uses no paid calls.
+Create expense and in-app notification records in one SQLite transaction. Add recurring rules and due suggestions with durable deduplication, budgets, notifications, and user-initiated AI financial insights that visibly separate deterministic facts from generated interpretation. Actuals, rules, and suggestions remain separate.
 
-## M7 — Testing, mobile polish, PWA, and self-hosted deployment
+## M7 — Production release
 
 Complete behavioral/accessibility/performance coverage, 320/375/390px and desktop polish, installable PWA work, production single-container packaging, persistent-volume migrations, health checks, backup/restore exercise, security/privacy review, and release runbook.
 

@@ -58,7 +58,8 @@ The shell uses a compact wordmark, household selector, period context, and notif
 - Start with shadcn primitives and preserve their accessibility contracts.
 - Prefer flat lists and separators to nested cards.
 - Use one primary action per task region.
-- Drawers require a title, contained overscroll, initial focus, focus restoration, and safe-area-aware actions.
+- Short desktop overlays require a title, contained overscroll, initial focus, focus restoration, and safe-area-aware actions. Mobile Capture is not an overlay.
+- Large option sets use searchable, touch-friendly full-screen pickers on mobile. Small option sets use compact segmented controls or chips with clear pressed and selected states.
 - Labels remain visible; placeholders are examples only. Errors sit beside their control and focus the first invalid field.
 - Empty states explain the absence and offer one relevant next action.
 
@@ -68,11 +69,13 @@ Order: stable category icon, description, creator/date metadata, optional tags, 
 
 ### Capture
 
-Capture is a focused bottom sheet. Smart natural-language and Manual modes share one draft. Switching modes never clears or duplicates data.
+Capture is a dedicated full-screen mobile route in normal document flow. It hides the application navigation, returns to its originating route, and persists one Smart/Manual draft through picker interactions and accidental navigation. Desktop may use the same route or a focused dialog, but both presentations reuse the same draft and domain rules.
 
 Immediately visible: amount, adjacent currency, description/smart input, expense date, time of day, category, frequency, expectation, and optional tags. Time supports Now only for the current expense date; historical entries use Morning, Afternoon, Evening, or Unspecified and never inherit a current-time timestamp.
 
 History autocomplete responds to typed input and uses existing authorised group history. A selected suggestion fills only fields that the user has not explicitly set. Deterministic parsing and simulated AI must be labelled honestly. Explicit amount, currency, and date always win. Save remains visible through scrolling, keyboard use, validation, and long input.
+
+The capture layout must tolerate visual-viewport resize, browser chrome, orientation changes, and safe areas without hardcoded keyboard offsets. Prefer normal document scrolling; focused fields and the save action must remain reachable with numeric or text keyboards open. Currency and category use searchable pickers; frequency, expectation, and time use compact reliable choices. Physical iPhone and Android verification remains mandatory because emulation and desktop WebKit cannot prove virtual-keyboard behavior.
 
 ### Activity
 

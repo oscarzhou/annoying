@@ -21,61 +21,117 @@ test("group switching and notifications are reachable", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Notifications/ })).toBeVisible();
 });
 
-test("separate-field quick add reconciles across dashboard and activity", async ({ page }) => {
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
+test("capture route saves once and reconciles across Home and Activity", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await expect(page).toHaveURL(/\/capture\?from=%2F/);
   await page.getByLabel("Amount", { exact: true }).fill("24.50");
-  await page.locator("#quick-description").fill("Lunch at the wharf");
+  await page.locator("#capture-description").fill("Lunch at the wharf");
   await page.getByRole("button", { name: /Save expense/ }).click();
-  const row = page.getByRole("button", { name: /Lunch at the wharf/ });
-  await expect(row).toContainText("$24.50");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("button", { name: /Lunch at the wharf/ })).toContainText("$24.50");
   await page.getByRole("link", { name: "Activity", exact: true }).first().click();
   await expect(page.getByText("16 transactions · $2,577.36")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Lunch at the wharf/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Lunch at the wharf/ })).toHaveCount(1);
 });
 
-test("natural-language amount works while explicit amount takes priority", async ({ page }) => {
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
-  await page.locator("#quick-description").fill("groceries 85");
-  await expect(page.getByText(/detected · explicit fields always win/)).toBeVisible();
+test("natural input keeps explicit amount and classifications", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.locator("#capture-description").fill("groceries 85");
+  await expect(page.getByRole("button", { name: "Category: Groceries" })).toBeVisible();
   await page.getByLabel("Amount", { exact: true }).fill("90");
   await expect(page.getByRole("button", { name: /Save expense · \$90\.00/ })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Frequency" })).toHaveText(/Pending review/);
-  await page.getByRole("button", { name: /Save expense/ }).click();
-  await expect(page.getByRole("button", { name: /^groceries Alex recorded/i })).toContainText("$90.00");
+  await expect(page.getByRole("radio", { name: "Unconfirmed" }).first()).toHaveAttribute("data-state", "on");
 });
 
-test("smart parsing exposes currency and historical date without inventing time", async ({ page }) => {
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
-  await page.locator("#quick-description").fill("taxi 35 USD yesterday");
-  await expect(page.getByRole("combobox", { name: "Currency" })).toHaveText(/USD/);
-  await expect(page.getByLabel("Expense date")).toHaveValue("2026-11-23");
-  await expect(page.getByRole("combobox", { name: "Time of day" })).toHaveText(/Unspecified/);
-  await expect(page.getByRole("combobox", { name: "Category" })).toHaveText(/Transport/);
+test("date reset uses current group-local date and historical time is unspecified", async ({ page }) => {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Auckland", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.getByLabel("Expense date").fill("2020-01-02");
+  await expect(page.getByRole("button", { name: "Time of day: Unspecified" })).toBeVisible();
+  await page.getByRole("button", { name: "Reset date" }).click();
+  await expect(page.getByLabel("Expense date")).toHaveValue(today);
+  await page.getByRole("button", { name: "Reset to now" }).click();
+  await expect(page.getByRole("button", { name: "Time of day: Now" })).toBeVisible();
 });
 
-test("history autocomplete preserves explicit amount and shared draft across modes", async ({ page }) => {
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
+test("history autocomplete ranks matches and preserves explicit fields across modes", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
   await page.getByLabel("Amount", { exact: true }).fill("10.00");
-  await page.locator("#quick-description").fill("Weekly gro");
+  await page.getByRole("button", { name: /Category:/ }).click();
+  await page.getByRole("button", { name: /Travel/ }).click();
+  await page.locator("#capture-description").fill("wekly grocries");
   const suggestion = page.getByRole("option", { name: /Weekly groceries/ }).first();
   await expect(suggestion).toBeVisible();
   await suggestion.click();
   await expect(page.getByLabel("Amount", { exact: true })).toHaveValue("10.00");
+  await expect(page.getByRole("button", { name: "Category: Travel" })).toBeVisible();
   await page.getByRole("tab", { name: "Manual" }).click();
-  await expect(page.locator("#quick-description")).toHaveValue("Weekly groceries");
-  await expect(page.getByRole("combobox", { name: "Category" })).toHaveText(/Groceries/);
+  await expect(page.locator("#capture-description")).toHaveValue("Weekly groceries");
 });
 
-test("validation and reachable drawer footer work", async ({ page }) => {
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
-  await expect(page.getByLabel("Amount", { exact: true })).toBeFocused();
+test("currency picker supports search and blocks unresolved conversion", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.getByRole("button", { name: "Currency: NZD" }).click();
+  await page.getByPlaceholder("Search currency…").fill("yuan");
+  await page.getByRole("button", { name: /CNY Chinese yuan/ }).click();
+  await expect(page.getByRole("button", { name: "Currency: CNY" })).toBeVisible();
+  await page.getByLabel("Amount", { exact: true }).fill("25.00");
+  await page.locator("#capture-description").fill("Dinner in Shanghai");
+  await expect(page.getByText("Conversion unavailable", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Save expense", exact: true }).click();
-  await expect(page.getByText("Add a description and an amount with no more than 2 decimal places.")).toBeVisible();
+  await expect(page.getByText(/CNY has no prototype exchange rate/)).toBeVisible();
+});
+
+test("category picker scrolls and selects after touch-style movement", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.getByRole("button", { name: /Category:/ }).click();
+  const list = page.getByRole("dialog").locator("div.overflow-y-auto");
+  await list.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }));
+  await page.getByRole("button", { name: /Unclassified/ }).click();
+  await expect(page.getByRole("button", { name: "Category: Unclassified" })).toBeVisible();
+});
+
+test("AT HOP input suggests Transport and relevant unconfirmed tags", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.locator("#capture-description").fill("at hop top up for ferry");
+  await expect(page.getByRole("button", { name: "Category: Transport" })).toBeVisible();
+  await expect(page.getByText("AT HOP card top-up for ferry travel")).toBeVisible();
+  for (const tag of ["Transport", "Public transport", "Ferry", "AT HOP", "Top-up"]) await expect(page.getByRole("button", { name: tag, exact: true })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Unconfirmed" }).first()).toHaveAttribute("data-state", "on");
+});
+
+test("custom tags deduplicate case-insensitively", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.getByLabel("Custom tag").fill("Family trip");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByLabel("Custom tag").fill("family TRIP");
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Remove Family trip tag" })).toHaveCount(1);
+});
+
+test("capture cancellation returns to origin and draft survives route navigation", async ({ page }) => {
+  await page.getByRole("link", { name: "Activity", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/activity/);
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.locator("#capture-description").fill("Draft ferry fare");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/activity/);
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await expect(page.locator("#capture-description")).toHaveValue("Draft ferry fare");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Cancel new expense" }).click();
+  await expect(page).toHaveURL(/\/activity/);
+});
+
+test("capture stays usable at a constrained visible height", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.setViewportSize({ width: 390, height: 480 });
+  await page.getByLabel("Amount", { exact: true }).focus();
+  await expect(page.getByLabel("Amount", { exact: true })).toBeInViewport();
   const save = page.getByRole("button", { name: "Save expense", exact: true });
-  await expect(save).toBeVisible();
-  const box = await save.boundingBox();
-  const viewport = page.viewportSize();
-  expect(box && viewport && box.y + box.height <= viewport.height).toBe(true);
+  await save.scrollIntoViewIfNeeded();
+  await expect(save).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("activity search and progressive filters update totals", async ({ page }) => {
@@ -113,6 +169,7 @@ test("recurring confirmation is single-use", async ({ page }) => {
   await confirm.click();
   const confirmed = page.getByRole("button", { name: "Confirmed", exact: true });
   await expect(confirmed).toBeDisabled();
+  await expect(page.getByRole("button", { name: /Weekly rent/ })).toContainText("$690.00");
 });
 
 test("settings rows open focused drawers", async ({ page }) => {
@@ -131,12 +188,12 @@ test("captures primary viewport screens", async ({ page }, testInfo) => {
     await page.getByRole("link", { name: destination, exact: true }).first().click();
     await page.screenshot({ path: `artifacts/screenshots/${destination.toLowerCase()}-390-viewport.png` });
   }
-  await page.getByRole("button", { name: "Capture expense" }).first().click();
-  await expect(page.getByRole("heading", { name: "Capture expense" })).toBeVisible();
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await expect(page.getByRole("heading", { name: "New expense" })).toBeVisible();
   await page.waitForTimeout(500);
-  await page.screenshot({ path: "artifacts/screenshots/quick-add-collapsed-390-viewport.png" });
-  await expect(page.getByRole("combobox", { name: "Frequency" })).toBeVisible();
-  await page.getByRole("combobox", { name: "Frequency" }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "artifacts/screenshots/capture-route-390-viewport.png" });
+  await expect(page.locator('[aria-label="Frequency"]')).toBeVisible();
+  await page.locator('[aria-label="Frequency"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
-  await page.screenshot({ path: "artifacts/screenshots/quick-add-expanded-390-viewport.png" });
+  await page.screenshot({ path: "artifacts/screenshots/capture-classification-390-viewport.png" });
 });

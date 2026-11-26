@@ -1,9 +1,10 @@
 import type { Category, Expense, InsightPeriod } from "./types";
+import { convertPrototypeToGroupMinor, getCurrency } from "../capture/currency-data";
 
 export const REFERENCE_DATE = "2026-11-24";
 export const GROUP_CURRENCY = "NZD";
 export const MONTHLY_BUDGET_MINOR = 380000;
-export const formatMoney = (minor: number, currency = GROUP_CURRENCY, maximumFractionDigits = 2) => new Intl.NumberFormat("en-NZ", { style: "currency", currency, maximumFractionDigits }).format(minor / 100);
+export const formatMoney = (minor: number, currency = GROUP_CURRENCY, maximumFractionDigits = getCurrency(currency).minorUnit) => new Intl.NumberFormat("en-NZ", { style: "currency", currency, maximumFractionDigits }).format(minor / 10 ** getCurrency(currency).minorUnit);
 export const formatCompactMoney = (minor: number) => new Intl.NumberFormat("en-NZ", { style: "currency", currency: GROUP_CURRENCY, maximumFractionDigits: 0, notation: "compact" }).format(minor / 100);
 export const formatDate = (date: string, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" }) => new Intl.DateTimeFormat("en-NZ", options).format(new Date(`${date}T12:00:00`));
 export const parseMoneyToMinor = (value: string) => {
@@ -14,8 +15,7 @@ export const parseMoneyToMinor = (value: string) => {
   const minor = whole * 100 + fraction;
   return Number.isSafeInteger(minor) ? minor : Number.NaN;
 };
-const conversionRatio = { NZD: [1, 1], AUD: [1109, 1000], USD: [162, 100] } as const;
-export const convertToGroupMinor = (minor: number, currency: Expense["currency"]) => { const [numerator, denominator] = conversionRatio[currency]; return Math.floor((minor * numerator + Math.floor(denominator / 2)) / denominator); };
+export const convertToGroupMinor = (minor: number, currency: Expense["currency"]) => convertPrototypeToGroupMinor(minor, currency) ?? Number.NaN;
 export const inRange = (expense: Expense, start: string, end: string) => expense.date >= start && expense.date <= end;
 export const sumExpenses = (expenses: Expense[]) => expenses.reduce((sum, expense) => sum + expense.groupAmountMinor, 0);
 

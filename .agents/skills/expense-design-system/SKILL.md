@@ -18,7 +18,7 @@ Treat `docs/DESIGN.md` as the source of truth. Load `shadcn` for APIs and `mobil
 - Distinguish persisted facts, pending suggestions, and AI interpretation by labels and hierarchy, not color alone.
 - Use category icons, not member initials, as the primary transaction marker. Share the same category metadata and semantic chart color on every screen.
 - Prefer compact divided lists for activity and settings indexes. Reserve cards for genuinely grouped surfaces instead of wrapping every section.
-- Capture exposes amount, currency, date, time, and all 3 independent classifications without a “More details” gate. Smart and Manual modes share one draft. Optional tags remain a fourth, separate concept.
+- Capture uses the full-screen mobile route defined in `docs/DESIGN.md`, exposes amount, searchable currency, date, time, and all 3 independent classifications without a “More details” gate, and uses native-like pressed/selected feedback. Smart and Manual modes share one protected draft. Optional tags remain a fourth, separate concept.
 
 Charts use shadcn Chart and shared config. Avoid isolated palettes/tooltips, 3D, gradients, dual axes, and meaningless animation. Pair every chart with deterministic labelled totals and accessible values; support touch and reduced motion. Exercise empty, single, many-category, long-label, budget, and foreign-currency states.
 

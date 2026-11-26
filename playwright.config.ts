@@ -18,6 +18,7 @@ export default defineConfig({
     { name: "mobile-320", use: { ...devices["Desktop Chrome"], viewport: { width: 320, height: 740 } } },
     { name: "mobile-375", use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } } },
     { name: "mobile-390", use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } } },
+    { name: "webkit-390", use: { ...devices["Desktop Safari"], viewport: { width: 390, height: 844 } } },
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
 });
