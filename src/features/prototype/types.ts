@@ -1,0 +1,9 @@
+export type Category = "Housing" | "Groceries" | "Dining" | "Transport" | "Utilities" | "Health" | "Shopping" | "Entertainment" | "Subscriptions" | "Travel" | "Education" | "Insurance" | "Gifts" | "Household" | "Other";
+export type Frequency = "Recurring" | "One-off" | "Pending review";
+export type Expectation = "Expected" | "Unexpected" | "Pending review";
+export type ExpensePeriod = "Now" | "Morning" | "Afternoon" | "Evening" | null;
+export type ExpenseTag = string;
+export type Expense = { id: string; description: string; originalInput: string; amountMinor: number; currency: string; groupAmountMinor: number; date: string; period: ExpensePeriod; category: Category | "Unclassified"; frequency: Frequency; expectation: Expectation; tags: ExpenseTag[]; creator: "Alex" | "Jordan"; };
+export type RecurringSuggestion = { id: string; description: string; amountMinor: number; dueDate: string; state: "Upcoming" | "Due" | "Confirmed"; category: Category; };
+export type Screen = "dashboard" | "activity" | "insights" | "settings";
+export type InsightPeriod = "week" | "month";
