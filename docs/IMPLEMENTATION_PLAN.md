@@ -1,6 +1,6 @@
 # Implementation Plan — annoying.
 
-Status: M2.5 Part A.1 mobile interaction remediation implemented; physical-device acceptance pending.
+Status: M2.5 Part B Carbon migration implemented; final browser review in progress.
 
 ## Proportionate workflow
 
@@ -33,9 +33,17 @@ Acceptance: explicit amount/currency/date win over inferred values; historical t
 
 Review gate: stop after Home, Capture, and shared-shell approval. Part B applies the approved Carbon language to Activity, Insights, Settings, and future authentication designs and resolves remaining M2 review findings without expanding into backend work.
 
+## M2.5 Part B — Carbon completion
+
+Complete the Carbon migration across Activity, Insights, and Settings; keep one in-memory ledger and shared financial helpers; split oversized prototype screen boundaries; verify same-session capture autocomplete; and preserve the physically accepted Capture architecture. Settings must label prototype, preview, planned, and disconnected states honestly. Detailed M3 direction lives in `docs/M3_PROPOSAL.md`; no persistence or authentication belongs in Part B.
+
+Acceptance: Activity is a compact searchable grouped ledger with exact filtered totals and shared transaction rows; Insights presents period navigation, trends, budget, category, classification, tag, recorded-by, and explicitly simulated analysis without fabricated data; Settings exposes compact grouped navigation and dedicated configuration previews; all supported browser viewports, Capture regression tests, lint, type checking, unit tests, Playwright, and build pass.
+
 ## M3 — Authentication, groups, and invitations
 
 Implement strong sessions/passwords, first-user bootstrap, invitation-only subsequent registration, multi-group switching, Owner/Member authorization, and single-use seven-day invitations. Every group read/write is server-authorized. Finalize recovery and detailed permissions in this milestone.
+
+Review and approve `docs/M3_PROPOSAL.md` before implementation.
 
 ## M4 — Real expense engine
 

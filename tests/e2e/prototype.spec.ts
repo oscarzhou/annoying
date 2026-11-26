@@ -69,6 +69,25 @@ test("history autocomplete ranks matches and preserves explicit fields across mo
   await expect(page.locator("#capture-description")).toHaveValue("Weekly groceries");
 });
 
+test("newly saved expenses are searchable by prefix, token, substring, and case within the session", async ({ page }) => {
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.getByLabel("Amount", { exact: true }).fill("12.40");
+  await page.locator("#capture-description").fill("Harbour Shuttle Pass");
+  await page.getByRole("button", { name: /Save expense/ }).click();
+
+  for (const query of ["HARB", "shuttle", "ttle pa"]) {
+    await page.getByRole("link", { name: "Capture expense" }).first().click();
+    await page.locator("#capture-description").fill(query);
+    await expect(page.getByRole("option", { name: /Harbour Shuttle Pass/ })).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Cancel new expense" }).click();
+  }
+
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.locator("#capture-description").fill("unrelated phrase");
+  await expect(page.getByRole("listbox", { name: "Matching expense history" })).toHaveCount(0);
+});
+
 test("currency picker supports search and blocks unresolved conversion", async ({ page }) => {
   await page.getByRole("link", { name: "Capture expense" }).first().click();
   await page.getByRole("button", { name: "Currency: NZD" }).click();
@@ -174,8 +193,8 @@ test("recurring confirmation is single-use", async ({ page }) => {
 
 test("settings rows open focused drawers", async ({ page }) => {
   await page.getByRole("link", { name: "Settings", exact: true }).first().click();
-  await page.getByRole("button", { name: "Group preferences" }).click();
-  await expect(page.getByRole("heading", { name: "Group preferences" })).toBeVisible();
+  await page.getByRole("button", { name: /Household preferences/ }).click();
+  await expect(page.getByRole("heading", { name: "Household preferences" })).toBeVisible();
   await page.getByRole("button", { name: "Cancel" }).click();
   await page.getByRole("button", { name: "AI provider & model" }).click();
   await expect(page.getByText("Real credentials are not accepted in this milestone.")).toBeVisible();
@@ -196,4 +215,20 @@ test("captures primary viewport screens", async ({ page }, testInfo) => {
   await page.locator('[aria-label="Frequency"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
   await page.screenshot({ path: "artifacts/screenshots/capture-classification-390-viewport.png" });
+});
+
+test("captures M2.5 final review deliverables", async ({ page }, testInfo) => {
+  test.skip(!["mobile-390", "desktop"].includes(testInfo.project.name), "Final review uses primary mobile and desktop.");
+  await mkdir("artifacts/m2.5-final-review", { recursive: true });
+  if (testInfo.project.name === "desktop") {
+    await page.getByRole("link", { name: "Insights", exact: true }).first().click();
+    await page.screenshot({ path: "artifacts/m2.5-final-review/representative-desktop.png", fullPage: true });
+    return;
+  }
+  for (const [destination, filename] of [["Home", "home-390.png"], ["Activity", "activity-390.png"], ["Insights", "insights-390.png"], ["Settings", "settings-390.png"]] as const) {
+    await page.getByRole("link", { name: destination, exact: true }).first().click();
+    await page.screenshot({ path: `artifacts/m2.5-final-review/${filename}`, fullPage: true });
+  }
+  await page.getByRole("link", { name: "Capture expense" }).first().click();
+  await page.screenshot({ path: "artifacts/m2.5-final-review/capture-390.png", fullPage: true });
 });
